@@ -2030,5 +2030,53 @@ TEST_F(UserMgrInTest, EnsurePredefinedGroupsExist_CreationFailureIsSuppressed)
     EXPECT_NO_THROW(UserMgr::ensurePredefinedGroupsExist());
 }
 
+// Tests for UserMgr::userPasswordExpired(const std::string& userName, bool
+// value) value=false rejects unexpiring, value=true calls chage --lastday 0,
+// UID-0 user is always rejected by throwForUidZero.
+TEST_F(UserMgrInTest, UserPasswordExpiredSetFalseThrowsNotAllowed)
+{
+    const std::string userName = getNextUserName();
+    EXPECT_NO_THROW(
+        UserMgr::createUser(userName, {"redfish", "ssh"}, "priv-user", true));
+
+    EXPECT_THROW(UserMgr::userPasswordExpired(userName, false), NotAllowed);
+
+    EXPECT_NO_THROW(UserMgr::deleteUser(userName));
+}
+
+TEST_F(UserMgrInTest, UserPasswordExpiredSetTrueUidZeroThrowsNotAllowed)
+{
+    const std::string userName = getNextUserName();
+    EXPECT_NO_THROW(
+        UserMgr::createUser(userName, {"redfish", "ssh"}, "priv-user", true));
+
+    EXPECT_CALL(*this, getSystemUser(testing::StrEq(userName)))
+        .WillOnce([]() {
+            auto info = std::make_unique<struct SystemUserInfo>();
+            info->pwd.pw_uid = 0;
+            return info;
+        })
+        .WillOnce([]() {
+            auto info = std::make_unique<struct SystemUserInfo>();
+            info->pwd.pw_uid = 1000;
+            return info;
+        });
+
+    EXPECT_THROW(UserMgr::userPasswordExpired(userName, true), NotAllowed);
+
+    EXPECT_NO_THROW(UserMgr::deleteUser(userName));
+}
+
+TEST_F(UserMgrInTest, UserPasswordExpiredSetTrueSuccess)
+{
+    const std::string userName = getNextUserName();
+    EXPECT_NO_THROW(
+        UserMgr::createUser(userName, {"redfish", "ssh"}, "priv-user", true));
+
+    EXPECT_THROW(UserMgr::userPasswordExpired(userName, true), InternalFailure);
+
+    EXPECT_NO_THROW(UserMgr::deleteUser(userName));
+}
+
 } // namespace user
 } // namespace phosphor
