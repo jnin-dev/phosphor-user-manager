@@ -24,7 +24,6 @@ namespace user
 {
 
 using ::testing::_;
-using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::Throw;
 
@@ -173,10 +172,10 @@ class TestUserMgr : public testing::Test
                                    const PasswordInfo& newInfo)
     {
         EXPECT_CALL(mockManager, getShadowData(testing::StrEq(userName), _))
-            .WillOnce(Invoke([&oldInfo](auto, struct spwd& spwd) {
+            .WillOnce([&oldInfo](auto, struct spwd& spwd) {
                 spwd.sp_lstchg = oldInfo.lastChangeDate;
                 spwd.sp_max = oldInfo.maxAge;
-            }));
+            });
 
         EXPECT_CALL(mockManager, executeUserPasswordExpiration(
                                      testing::StrEq(userName),
@@ -197,10 +196,10 @@ class TestUserMgr : public testing::Test
                                      const PasswordInfo& info)
     {
         EXPECT_CALL(mockManager, getShadowData(testing::StrEq(userName), _))
-            .WillOnce(Invoke([&info](auto, struct spwd& spwd) {
+            .WillOnce([&info](auto, struct spwd& spwd) {
                 spwd.sp_lstchg = info.lastChangeDate;
                 spwd.sp_max = info.maxAge;
-            }));
+            });
 
         EXPECT_CALL(mockManager,
                     executeUserPasswordExpiration(
@@ -222,10 +221,10 @@ class TestUserMgr : public testing::Test
                                    const uint64_t expectedPasswordExpiration)
     {
         EXPECT_CALL(mockManager, getShadowData(testing::StrEq(userName), _))
-            .WillOnce(Invoke([&info](auto, struct spwd& spwd) {
+            .WillOnce([&info](auto, struct spwd& spwd) {
                 spwd.sp_lstchg = info.lastChangeDate;
                 spwd.sp_max = info.maxAge;
-            }));
+            });
 
         createLocalUser(userName, {"ssh"}, "priv-admin", true);
 
@@ -412,10 +411,10 @@ TEST_F(TestUserMgr, PasswordExpirationGetLastChangeZero)
     constexpr long passwordAge = 4;
 
     EXPECT_CALL(mockManager, getShadowData(testing::StrEq(userName), _))
-        .WillOnce(Invoke([](auto, struct spwd& spwd) {
+        .WillOnce([](auto, struct spwd& spwd) {
             spwd.sp_lstchg = lastChangeDate;
             spwd.sp_max = passwordAge;
-        }));
+        });
 
     createLocalUser(userName, {"ssh"}, "priv-admin", true);
 
@@ -464,10 +463,10 @@ TEST_F(TestUserMgr, PasswordExpirationInvalidDate)
     const std::string userName = getNextUserName();
 
     EXPECT_CALL(mockManager, getShadowData(testing::StrEq(userName), _))
-        .WillOnce(Invoke([](auto, struct spwd& spwd) {
+        .WillOnce([](auto, struct spwd& spwd) {
             spwd.sp_lstchg = 2;
             spwd.sp_max = 2;
-        }));
+        });
 
     EXPECT_CALL(mockManager, executeUserPasswordExpiration(_, _, _)).Times(0);
 
@@ -488,10 +487,10 @@ TEST_F(TestUserMgr, PasswordExpirationExecFail)
 
     constexpr long lastChangeDate = 3;
     EXPECT_CALL(mockManager, getShadowData(testing::StrEq(userName), _))
-        .WillOnce(Invoke([](auto, struct spwd& spwd) {
+        .WillOnce([](auto, struct spwd& spwd) {
             spwd.sp_lstchg = lastChangeDate;
             spwd.sp_max = 5;
-        }));
+        });
 
     constexpr long passwordAge = 11;
     EXPECT_CALL(mockManager,
@@ -638,7 +637,6 @@ class UserMgrInTest : public testing::Test, public UserMgr
             .WillByDefault([this]() {
                 ON_CALL(*this, isUserEnabled)
                     .WillByDefault(testing::Return(true));
-                testing::Return();
             });
 
         ON_CALL(*this, executeUserAdd(testing::_, testing::_, testing::_,
@@ -646,7 +644,6 @@ class UserMgrInTest : public testing::Test, public UserMgr
             .WillByDefault([this]() {
                 ON_CALL(*this, isUserEnabled)
                     .WillByDefault(testing::Return(false));
-                testing::Return();
             });
 
         ON_CALL(*this, executeUserDelete).WillByDefault(testing::Return());
@@ -666,7 +663,6 @@ class UserMgrInTest : public testing::Test, public UserMgr
             .WillByDefault([this]() {
                 ON_CALL(*this, isUserEnabled)
                     .WillByDefault(testing::Return(true));
-                testing::Return();
             });
 
         ON_CALL(*this,
@@ -674,7 +670,6 @@ class UserMgrInTest : public testing::Test, public UserMgr
             .WillByDefault([this]() {
                 ON_CALL(*this, isUserEnabled)
                     .WillByDefault(testing::Return(false));
-                testing::Return();
             });
 
         ON_CALL(*this, executeGroupCreation(testing::_))
@@ -762,10 +757,10 @@ class UserMgrInTest : public testing::Test, public UserMgr
                                     const PasswordExpirationInfo& info)
     {
         EXPECT_CALL(*this, getShadowData(testing::StrEq(userName), _))
-            .WillOnce(Invoke([&info](auto, struct spwd& spwd) {
+            .WillOnce([&info](auto, struct spwd& spwd) {
                 spwd.sp_lstchg = info.lastChangeDate;
                 spwd.sp_max = info.oldmaxAge;
-            }));
+            });
 
         EXPECT_CALL(*this, executeUserPasswordExpiration(
                                testing::StrEq(userName), info.lastChangeDate,
@@ -1906,10 +1901,10 @@ TEST_F(UserMgrInTest, CreateUser2UnexpiringPassword)
     setUpCreateUser(userName, enabled);
 
     EXPECT_CALL(*this, getShadowData(testing::StrEq(userName), _))
-        .WillOnce(Invoke([&lastChangeDate](auto, struct spwd& spwd) {
+        .WillOnce([&lastChangeDate](auto, struct spwd& spwd) {
             spwd.sp_lstchg = lastChangeDate;
             spwd.sp_max = passwordAge;
-        }));
+        });
 
     EXPECT_CALL(*this, executeUserPasswordExpiration(
                            testing::StrEq(userName), lastChangeDate,
