@@ -2078,5 +2078,18 @@ TEST_F(UserMgrInTest, UserPasswordExpiredSetTrueSuccess)
     EXPECT_NO_THROW(UserMgr::deleteUser(userName));
 }
 
+TEST_F(TestUserMgr, UserPasswordExpiredSetTrueNoOpIfAlreadyExpired)
+{
+    const std::string userName = getNextUserName();
+
+    createLocalUser(userName, {"redfish", "ssh"}, "priv-user", true);
+
+    auto& user = getUser(userName);
+
+    user.UsersIface::userPasswordExpired(true);
+
+    EXPECT_NO_THROW(user.userPasswordExpired(true));
+}
+
 } // namespace user
 } // namespace phosphor
